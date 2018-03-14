@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@cityofzion/neon-js": "^3.4.0",
-    "fast-csv": "^2.4.1"
+    "csv": "^2.0.0",
+    "neon-js": "https://github.com/ConjurTech/neon-js.git"
   }
 }
