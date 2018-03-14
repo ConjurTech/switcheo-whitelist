@@ -1,0 +1,10 @@
+{
+  "name": "switcheo-whitelist",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@cityofzion/neon-js": "^3.4.0",
+    "fast-csv": "^2.4.1"
+  }
+}
