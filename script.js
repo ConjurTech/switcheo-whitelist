@@ -5,23 +5,25 @@ const stream = require('stream');
 const util = require('util');
 
 const { sc, api, tx, rpc, u, wallet } = neon
-const net = 'TestNet'
+const net = 'https://test-db.switcheo.network'
 const contractHash = '78e6d16b914fe15bc16150aeb11d0c2a8e532bdd'
 const gasAssetID = '602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7'
-const seederAddress = 'AHDfSLZANnJ4N9Rj3FCokP14jceu3u7Bvw'
-const seederScriptHash = wallet.getScriptHashFromAddress(seederAddress)
-const seederKey = ''
-const batchSize = 5
-const intents = [{ scriptHash: seederScriptHash, assetId: gasAssetID, value: 0.00000001 }]
-const client = new rpc.RPCClient(net)
+const client = new rpc.RPCClient('https://seed1.switcheo.network:20331')
 const source = fs.createReadStream('addresses.csv')
 const parser = csv.parse()
 const processor = csv.transform(function (row) { return row[0] })
+const batchSize = 3
+let account = null
 let balances = null
+let intents = []
 
-// Initialize balance, resolve when everything is done
+// Initialize account, resolve when everything is done
 const run = new Promise(resolve => {
-  api.neonDB.getBalance(net, seederAddress).then((b) => {
+  account = new wallet.Account(process.env.WIF)
+  account.decrypt(process.env.PASSPHRASE)
+  intents = [{ scriptHash: account.scriptHash, assetId: gasAssetID, value: 0.00000001 }]
+
+  api.neonDB.getBalance(net, account.address).then((b) => {
     balances = b
     main(resolve)
   })
@@ -46,7 +48,7 @@ function main(resolve) {
     const last = chunk.toString() === '';
     if (!last) {
       const scriptHash = wallet.getScriptHashFromAddress(chunk.toString())
-      sb.emitAppCall(contractHash, 'addToWhitelist', [u.reverseHex(scriptHash), '31'])
+      sb.emitAppCall(contractHash, 'addToWhitelist', [u.reverseHex(scriptHash), '32'])
     }
 
     count++
@@ -61,21 +63,21 @@ function main(resolve) {
           // Not enough balances, wait then retry
           console.warn(err)
           return setTimeout(() => {
-            api.neonDB.getBalance(net, seederAddress).then(b => {
+            api.neonDB.getBalance(net, account.address).then(b => {
               balances = b
               tryInvoke()
             })
           }, 10000)
           return
         }
-        const signedTx = txn.sign(seederKey)
+        const signedTx = txn.sign(account.privateKey)
         client.sendRawTransaction(signedTx).then(result => {
           console.log(result)
           if (!result) {
             // Balance used, retry
             console.warn('txn failed!')
             return setTimeout(() => {
-              api.neonDB.getBalance(net, seederAddress).then(b => {
+              api.neonDB.getBalance(net, account.address).then(b => {
                 balances = b
                 tryInvoke()
               })
