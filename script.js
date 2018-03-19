@@ -5,11 +5,11 @@ const stream = require('stream');
 const util = require('util');
 
 const { sc, api, tx, rpc, u, wallet } = neon
-const net = 'https://test-db.switcheo.network'
+const net = 'MainNet'
 const contractHash = '78e6d16b914fe15bc16150aeb11d0c2a8e532bdd'
 const gasAssetID = '602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7'
-const client = new rpc.RPCClient('https://seed1.switcheo.network:20331')
-const source = fs.createReadStream('addresses.csv')
+const client = new rpc.RPCClient('MainNet')
+const source = fs.createReadStream('extras.csv')
 const parser = csv.parse()
 const processor = csv.transform(function (row) { return row[0] })
 const batchSize = 3
@@ -48,7 +48,7 @@ function main(resolve) {
     const last = chunk.toString() === '';
     if (!last) {
       const scriptHash = wallet.getScriptHashFromAddress(chunk.toString())
-      sb.emitAppCall(contractHash, 'addToWhitelist', [u.reverseHex(scriptHash), '32'])
+      sb.emitAppCall(contractHash, 'addToWhitelist', [u.reverseHex(scriptHash), '31'])
     }
 
     count++
